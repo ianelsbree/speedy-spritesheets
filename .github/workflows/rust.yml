@@ -17,8 +17,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      working-directory: ./speedy_spritesheets
       run: cargo build --verbose
     - name: Run tests
-      working-directory: ./speedy_spritesheets
       run: cargo test --verbose
