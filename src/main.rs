@@ -7,8 +7,6 @@ use sdl2::event::Event;
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
-use sdl2::render::WindowCanvas;
-use std::rc::Rc;
 
 fn print_test() {
     println!("Button test worked I think.");
@@ -66,7 +64,7 @@ fn main() -> Result<(), String> {
                     match mouse_btn {
                         MouseButton::Left => {
                             mouse_buttons[0] = 1;
-                            // test_button.click(Point::new(x, y));
+                            main_component.on_click(Point::new(x, y));
                         }
                         MouseButton::Right => mouse_buttons[1] = 1,
                         MouseButton::Middle => mouse_buttons[2] = 1,
