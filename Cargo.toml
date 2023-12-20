@@ -11,5 +11,4 @@ repository = "https://github.com/ianelsbree/speedy-spritesheets"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ogl33 = { version = "0.2.0", features = ["debug_error_checks"] }
-glfw = "0.54.0"
+sdl2 = "*"
