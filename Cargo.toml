@@ -11,4 +11,4 @@ repository = "https://github.com/ianelsbree/speedy-spritesheets"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sdl2 = "*"
+sdl2 = "0.36.0"
