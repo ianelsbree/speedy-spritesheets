@@ -1,101 +1,88 @@
-mod button;
-mod component;
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-use crate::button::Button;
-use crate::component::Component;
-use sdl2::event::Event;
-use sdl2::mouse::MouseButton;
-use sdl2::pixels::Color;
-use sdl2::rect::{Point, Rect};
+use eframe::egui;
+use eframe::egui::accesskit::Role::Image;
 
-fn print_test() {
-    println!("Button test worked I think.");
+fn main() -> Result<(), eframe::Error> {
+    /*use std::fs::File;
+    // The decoder is a build for reader and can be used to set various decoding options
+    // via `Transformations`. The default output transformation is `Transformations::IDENTITY`.
+    let decoder = png::Decoder::new(File::open("").unwrap());
+    let mut reader = decoder.read_info().unwrap();
+    // Allocate the output buffer.
+    let mut buf = vec![0; reader.output_buffer_size()];
+    // Read the next frame. An APNG might contain multiple frames.
+    let info = reader.next_frame(&mut buf).unwrap();
+    // Grab the bytes of the image.
+    let bytes = &buf[..info.buffer_size()];
+    // Inspect more details of the last read frame.
+    let in_animation = reader.info().frame_control.is_some();*/
+
+    env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default()
+            .with_inner_size([320.0, 240.0])
+            .with_drag_and_drop(true),
+        ..Default::default()
+    };
+    eframe::run_native(
+        "Speedy Spritesheets",
+        options,
+        Box::new(|cc| {
+            // This gives us image support:
+            egui_extras::install_image_loaders(&cc.egui_ctx);
+
+            Box::<MyApp>::default()
+        }),
+    )
 }
 
-fn close_window() {}
+#[derive(Default)]
+struct MyApp {
+    image_sequence: Vec<Vec<u8>>,
+    dropped_files: Vec<egui::DroppedFile>,
+    picked_path: Option<String>,
+}
 
-fn main() -> Result<(), String> {
-    let screen_width = 600;
-    let screen_height = 400;
-
-    let sdl_context = sdl2::init()?;
-    let video_subsystem = sdl_context.video()?;
-    let window = video_subsystem
-        .window("Speedy Spritesheets", screen_width, screen_height)
-        .build()
-        .unwrap();
-
-    let mut canvas = window.into_canvas().build().unwrap();
-
-    let mut running = true;
-    let mut event_queue = sdl_context.event_pump().unwrap();
-
-    let (mut mouse_x, mut mouse_y) = (0, 0);
-
-    let mut mouse_buttons = [0; 3];
-
-    let screen_area = Rect::new(0, 0, screen_width, screen_height);
-    let mut main_component = Component::new(screen_area, canvas, Color::RGB(52, 52, 52));
-
-    let test_button = Button::new(
-        Rect::new(50, 50, 150, 50),
-        Color::WHITE,
-        Color::BLACK,
-        Box::new(|| print_test()),
-    );
-    main_component.add_button(test_button);
-
-    while running {
-        // Calculations and event handling
-        for event in event_queue.poll_iter() {
-            match event {
-                Event::Quit { timestamp } => {
-                    println!("[{0}.{1}]Event quit.", timestamp / 1000, timestamp % 1000);
-                    running = false
-                }
-                Event::MouseMotion { x, y, .. } => {
-                    mouse_x = x;
-                    mouse_y = y;
-                    // println!("Mouse moved: ({x}, {y})");
-                }
-                Event::MouseButtonDown {
-                    mouse_btn, x, y, ..
-                } => {
-                    match mouse_btn {
-                        MouseButton::Left => {
-                            mouse_buttons[0] = 1;
-                            main_component.on_click(Point::new(x, y));
-                        }
-                        MouseButton::Right => mouse_buttons[1] = 1,
-                        MouseButton::Middle => mouse_buttons[2] = 1,
-                        _ => {}
-                    }
-                    /*println!(
-                        "Mouse button down: {:?} mouse button at ({}, {})",
-                        mouse_btn, x, y
-                    )*/
-                }
-                Event::MouseButtonUp {
-                    mouse_btn, x, y, ..
-                } => match mouse_btn {
-                    MouseButton::Left => mouse_buttons[0] = 0,
-                    MouseButton::Right => mouse_buttons[1] = 0,
-                    MouseButton::Middle => mouse_buttons[2] = 0,
-                    _ => {}
-                },
-                _ => {}
-            }
+/*impl Default for MyApp {
+    fn default() -> Self {
+        Self {
+            name: "Arthur".to_owned(),
+            age: 42,
+            image_sequence: Vec::new(),
         }
-
-        // Rendering pre-computes
-        /*clear_color = Color::RGB(
-            52 + 52 * mouse_buttons[0],
-            52 + 52 * mouse_buttons[1],
-            52 + 52 * mouse_buttons[2],
-        );*/
-
-        main_component.render()?;
     }
+}*/
 
-    Ok(())
+impl eframe::App for MyApp {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                ui.menu_button("File", |ui| {
+                    if ui.button("Import Images").clicked() {
+                        if let Some(path) = rfd::FileDialog::new().pick_file() {
+                            self.picked_path = Some(path.display().to_string());
+                            self.image_sequence.push(vec![0]);
+                        }
+                    }
+                    if let Some(picked_path) = &self.picked_path {
+                        ui.horizontal(|ui| {
+                            ui.label("Picked file:");
+                            ui.monospace(picked_path);
+                        });
+                    }
+                });
+                ui.menu_button("Edit", |ui| if ui.button("Features TBD").clicked() {})
+            });
+            ui.heading("Speedy Spritesheets");
+
+            ui.label(format!(
+                "Number of images imported: {}",
+                self.image_sequence.len()
+            ));
+            for image in &self.image_sequence {
+                ui.label(format!("{:?}", image));
+            }
+        });
+    }
 }
