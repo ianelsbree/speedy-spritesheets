@@ -12,7 +12,10 @@ repository = "https://github.com/ianelsbree/speedy-spritesheets"
 
 [dependencies]
 eframe = { version = "0.24.1", features = ["__screenshot", ] }
-egui_extras = { version = "0.24.2", features = ["image"] }
+egui_extras = { version = "0.24.2", features = ["all_loaders"] }
 env_logger = { version = "0.10.1", default-features = false, features = ["auto-color", "humantime", ] }
-png = "0.17.10"
+image = { version = "0.24.7", default-features = false, features = [
+    # "jpeg",
+    "png",
+] }
 rfd = "0.12.1"
