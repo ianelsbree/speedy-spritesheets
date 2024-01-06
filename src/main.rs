@@ -129,7 +129,7 @@ impl eframe::App for MyApp {
                         });
                 });
                 ScrollArea::vertical().auto_shrink(true).show(ui, |ui| {
-                    // ui.monospace(format!("{:?}", self.selected_image));
+                    ui.monospace(format!("{:#?}", self.selected_image));
                     if let Some(image) = &mut self.selected_image {
                         // ui.add(egui::Image::from_bytes("bytes://image", image.data.clone()));
                         if image.texture().is_none() {
@@ -171,7 +171,9 @@ impl eframe::App for MyApp {
                         let dropped_files = i.raw.dropped_files.clone();
                         for file in dropped_files {
                             if let Some(path) = file.path {
-                                self.image_sequence.push(Image::new(path));
+                                if path_buf_to_filename_string(&path).ends_with(".png") {
+                                    self.image_sequence.push(Image::new(path));
+                                }
                             }
                         }
                     }

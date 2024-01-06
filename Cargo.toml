@@ -1,6 +1,6 @@
 [package]
 name = "speedy-spritesheets"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 authors = ["Ian Elsbree <ianelsbree@gmail.com>"]
 description = "A simple tool for making animation sprite sheets out of image sequences."

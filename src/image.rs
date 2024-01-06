@@ -1,12 +1,14 @@
-use crate::path_buf_to_filename_string;
+use std::fmt::{Debug, Formatter};
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
 use eframe::egui;
 use eframe::egui::{ColorImage, TextureHandle, TextureOptions};
 use image as image_lib;
 use image_lib::io::Reader as ImageReader;
 use image_lib::DynamicImage;
-use std::fmt::{Debug, Formatter};
-use std::path::PathBuf;
-use std::sync::atomic::{AtomicUsize, Ordering};
+
+use crate::path_buf_to_filename_string;
 
 /// An image as defined by this tool, containing image data and other metadata
 #[derive(Default, Clone, PartialEq)]
@@ -23,10 +25,10 @@ impl Debug for Image {
         let has_texture = &self.texture.is_some();
         f.debug_struct("Image")
             .field("id", &self.id)
-            .field("path", &self.path)
-            .field("data", &self.data)
-            .field("texture", has_texture)
             .field("name", &self.name)
+            .field("path", &self.path)
+            .field("data", &"data")
+            .field("texture", has_texture)
             .finish()
     }
 }
