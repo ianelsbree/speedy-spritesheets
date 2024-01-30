@@ -2,6 +2,7 @@
 
 use std::path::PathBuf;
 
+use ::image::{DynamicImage, GenericImage};
 use eframe::egui;
 use eframe::egui::{menu, CollapsingHeader, ScrollArea};
 
@@ -32,6 +33,7 @@ fn main() -> Result<(), eframe::Error> {
 struct MyApp {
     image_sequence: Vec<Image>,
     selected_image: Option<Image>,
+    spritesheet: Option<Image>,
 }
 
 impl MyApp {
@@ -41,12 +43,24 @@ impl MyApp {
             .pick_files()
         {
             for path in paths {
-                self.image_sequence.push(Image::new(path));
+                self.image_sequence.push(Image::from_path(path));
             }
         }
     }
+    fn export_image(&self, image: &Image) {
+        if let Some(path) = rfd::FileDialog::new()
+            .add_filter("PNG", &["png"])
+            .save_file()
+        {
+            image.data().save(path).expect("error saving image file");
+        }
+    }
+
     fn no_images_loaded(&self) -> bool {
         self.image_sequence.len() == 0
+    }
+    fn some_images_loaded(&self) -> bool {
+        self.image_sequence.len() > 0
     }
 }
 
@@ -98,6 +112,46 @@ impl eframe::App for MyApp {
                 ));
 
                 ui.heading("Frames");
+                if self.some_images_loaded() {
+                    if ui.button("Generate Spritesheet!").clicked() {
+                        let width = self
+                            .image_sequence
+                            .iter()
+                            .fold(0, |acc, x| acc + x.data().width());
+                        let height = self
+                            .image_sequence
+                            .iter()
+                            .max_by(|x, y| x.data().height().cmp(&y.data().height()))
+                            .unwrap()
+                            .data()
+                            .height();
+                        let mut x_offset = 0;
+                        let mut ss_data = DynamicImage::new_rgb8(width, height);
+                        for image in &self.image_sequence {
+                            let data = image.data();
+                            ss_data
+                                .copy_from(data, x_offset, 0)
+                                .expect("error in copying image data into spritesheet");
+                            x_offset += data.width();
+                        }
+                        self.spritesheet = Some(Image::from_dynamic("Spritesheet", ss_data));
+                    }
+                }
+                if let Some(spritesheet) = &mut self.spritesheet {
+                    if spritesheet.texture().is_none() {
+                        spritesheet.load_texture(&ctx);
+                    }
+                    if let Some(texture) = &spritesheet.texture() {
+                        ui.add(egui::Image::new(texture).max_size([500.0, 5000.0].into()));
+                    } else {
+                        ui.label("Image is loaded but does not have a texture.");
+                    }
+                }
+                if let Some(spritesheet) = &self.spritesheet {
+                    if ui.button("Export spritesheet").clicked() {
+                        self.export_image(spritesheet);
+                    }
+                }
                 if self.no_images_loaded() {
                     ui.horizontal(|ui| {
                         ui.label("No images loaded");
@@ -107,8 +161,7 @@ impl eframe::App for MyApp {
                     });
                 }
                 ui.horizontal(|ui| {
-                    ui.label("Show data for image:");
-                    egui::ComboBox::from_label("")
+                    egui::ComboBox::from_label("Show data for image")
                         .selected_text(if let Some(selected_image) = &self.selected_image {
                             &selected_image.name()
                         } else if self.no_images_loaded() {
@@ -159,7 +212,9 @@ impl eframe::App for MyApp {
                 CollapsingHeader::new("Imported Image Paths").show(ui, |ui| {
                     ScrollArea::vertical().auto_shrink(true).show(ui, |ui| {
                         for image in &self.image_sequence {
-                            ui.monospace(format!("{}", image.path().display().to_string()));
+                            if let Some(path) = image.path() {
+                                ui.monospace(format!("{}", path.display().to_string()));
+                            }
                         }
                     });
                 });
@@ -172,7 +227,7 @@ impl eframe::App for MyApp {
                         for file in dropped_files {
                             if let Some(path) = file.path {
                                 if path_buf_to_filename_string(&path).ends_with(".png") {
-                                    self.image_sequence.push(Image::new(path));
+                                    self.image_sequence.push(Image::from_path(path));
                                 }
                             }
                         }

@@ -15,7 +15,7 @@ use crate::path_buf_to_filename_string;
 pub struct Image {
     id: usize,
     name: String,
-    path: PathBuf,
+    path: Option<PathBuf>,
     data: DynamicImage,
     texture: Option<TextureHandle>,
 }
@@ -35,21 +35,41 @@ impl Debug for Image {
 
 #[allow(dead_code)]
 impl Image {
-    pub fn new(filename: PathBuf) -> Self {
+    fn get_uid() -> usize {
         static ID_COUNTER: AtomicUsize = AtomicUsize::new(1);
-        let id = ID_COUNTER.fetch_add(1, Ordering::Relaxed);
+        ID_COUNTER.fetch_add(1, Ordering::Relaxed)
+    }
+    pub fn from_path(filename: PathBuf) -> Self {
+        let id = Self::get_uid();
+        let name = path_buf_to_filename_string(&filename);
         let data = ImageReader::open(&filename)
             .expect("could not open image")
             .decode()
             .expect("could not decode image");
-        let name = path_buf_to_filename_string(&filename);
-
+        let path = Some(filename);
+        let texture = None;
         Self {
             id,
             name,
-            path: filename,
+            path,
             data,
-            texture: None,
+            texture,
+        }
+    }
+    pub fn from_dynamic<N>(name: N, data: DynamicImage) -> Self
+    where
+        N: Into<String>,
+    {
+        let id = Self::get_uid();
+        let name = name.into();
+        let path = None;
+        let texture = None;
+        Self {
+            id,
+            name,
+            path,
+            data,
+            texture,
         }
     }
 
@@ -68,8 +88,12 @@ impl Image {
     pub fn name(&self) -> &str {
         &self.name
     }
-    pub fn path(&self) -> &PathBuf {
-        &self.path
+    pub fn path(&self) -> Option<&PathBuf> {
+        if let Some(path) = &self.path {
+            Some(&path)
+        } else {
+            None
+        }
     }
     pub fn data(&self) -> &DynamicImage {
         &self.data
