@@ -41,14 +41,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Overhaul entire project to use Egui and Eframe instead of SDL2 and custom UI systems
 
-## [0.1.1] - 2023-12-20
+## 0.1.1 - 2023-12-20
 
 ### Added
 
 - Click event handler
 
-## [0.1.0] - 2023-12-20
+## 0.1.0 - 2023-12-20
 
 ### Notes
 
 - Started this project :)
+
+[0.3.1]: https://github.com/ianelsbree/speedy-spritesheets/compare/v0.3.0...v0.3.1
+
+[0.3.0]: https://github.com/ianelsbree/speedy-spritesheets/compare/v0.2.2...v0.3.0
+
+[0.2.2]: https://github.com/ianelsbree/speedy-spritesheets/compare/v0.2.1...v0.2.2
+
+[0.2.1]: https://github.com/ianelsbree/speedy-spritesheets/compare/v0.2.0...v0.2.1
+
+[0.2.0]: https://github.com/ianelsbree/speedy-spritesheets/releases/tags/v0.2.0
