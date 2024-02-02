@@ -1,6 +1,6 @@
 [package]
 name = "speedy-spritesheets"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 authors = ["Ian Elsbree <ianelsbree@gmail.com>"]
 description = "A simple tool for making animation sprite sheets out of image sequences."
@@ -11,11 +11,12 @@ repository = "https://github.com/ianelsbree/speedy-spritesheets"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-eframe = { version = "0.24.1", features = ["__screenshot", ] }
-egui_extras = { version = "0.24.2", features = ["all_loaders"] }
-env_logger = { version = "0.10.1", default-features = false, features = ["auto-color", "humantime", ] }
-image = { version = "0.24.7", default-features = false, features = [
-    # "jpeg",
+eframe = { version = "0.25.0", features = ["__screenshot", ] }
+egui_extras = { version = "0.25.0", features = ["all_loaders"] }
+env_logger = { version = "0.11.1", default-features = false, features = ["auto-color", "humantime", ] }
+image = { version = "0.24.8", default-features = false, features = [
+    "jpeg",
     "png",
 ] }
-rfd = "0.12.1"
+rfd = "0.13.0"
+pkg-version = "1.0.0"

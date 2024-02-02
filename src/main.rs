@@ -4,11 +4,16 @@ use std::path::PathBuf;
 
 use ::image::{DynamicImage, GenericImage};
 use eframe::egui;
-use eframe::egui::{menu, CollapsingHeader, ScrollArea};
+use eframe::egui::{menu, vec2, CollapsingHeader, Pos2, ScrollArea};
+use pkg_version::*;
 
 use image::Image;
 
 mod image;
+
+const MAJOR: u32 = pkg_version_major!();
+const MINOR: u32 = pkg_version_minor!();
+const PATCH: u32 = pkg_version_patch!();
 
 fn main() -> Result<(), eframe::Error> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -21,11 +26,7 @@ fn main() -> Result<(), eframe::Error> {
     eframe::run_native(
         "Speedy Spritesheets",
         options,
-        Box::new(|cc| {
-            // This gives us image support:
-            egui_extras::install_image_loaders(&cc.egui_ctx);
-            Box::<MyApp>::default()
-        }),
+        Box::new(|_cc| Box::<MyApp>::default()),
     )
 }
 
@@ -34,6 +35,10 @@ struct MyApp {
     image_sequence: Vec<Image>,
     selected_image: Option<Image>,
     spritesheet: Option<Image>,
+    show_about_viewport: bool,
+    about_viewport_tl_corner: Pos2,
+    about_width: f32,
+    about_height: f32,
 }
 
 impl MyApp {
@@ -97,9 +102,72 @@ impl eframe::App for MyApp {
                     if ui.button("Features TBD").clicked() {
                         ui.close_menu();
                     }
+                });
+                ui.menu_button("Help", |ui| {
+                    if ui.button("About").clicked() {
+                        self.show_about_viewport = true;
+                        let mut main_viewport_pos = None;
+                        ctx.input(|i| main_viewport_pos = i.viewport().outer_rect);
+                        if let Some(main_viewport_pos) = main_viewport_pos {
+                            let main_tl_corner = main_viewport_pos.min;
+                            let main_width = main_viewport_pos.width();
+                            let main_height = main_viewport_pos.height();
+                            self.about_width = 300.0;
+                            self.about_height = 200.0;
+                            self.about_viewport_tl_corner = main_tl_corner
+                                + vec2(
+                                    main_width / 2.0 - self.about_width / 2.0,
+                                    main_height / 2.0 - self.about_height / 2.0,
+                                );
+                            ui.close_menu();
+                        }
+                    }
                 })
             });
         });
+
+        if self.show_about_viewport {
+            ctx.show_viewport_immediate(
+                egui::ViewportId::from_hash_of("about_viewport"),
+                egui::ViewportBuilder::default()
+                    .with_title("About Speedy Spritesheets")
+                    .with_inner_size([self.about_width, self.about_height])
+                    .with_resizable(false)
+                    .with_minimize_button(false)
+                    .with_maximize_button(false)
+                    .with_always_on_top()
+                    .with_position(self.about_viewport_tl_corner)
+                    .with_active(true),
+                |ctx, class| {
+                    assert!(
+                        class == egui::ViewportClass::Immediate,
+                        "This egui backend doesn't support multiple viewports"
+                    );
+
+                    egui::CentralPanel::default().show(ctx, |ui| {
+                        ui.vertical_centered(|ui| {
+                            let version_text =
+                                format!("Speedy Spritesheets v{}.{}.{}", MAJOR, MINOR, PATCH);
+                            ui.label(version_text);
+                            ui.label("Written by Ian Elsbree");
+                            ui.hyperlink_to(
+                                "GitHub Repository",
+                                "https://github.com/ianelsbree/speedy-spritesheets",
+                            );
+                            ui.hyperlink_to(
+                                "crates.io",
+                                "https://crates.io/crates/speedy-spritesheets",
+                            );
+                        });
+                    });
+
+                    if ctx.input(|i| i.viewport().close_requested()) {
+                        // Tell parent viewport that we should not show next frame:
+                        self.show_about_viewport = false;
+                    }
+                },
+            );
+        }
 
         // main window
         egui::CentralPanel::default().show(ctx, |ui| {
